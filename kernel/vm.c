@@ -432,3 +432,38 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+
+// 打印页表
+void
+vmprint(pagetable_t pagetable){
+  if(pagetable==0){
+    return ;
+  }
+  //freewalk中说明 一个页表中有 2^9 = 512 个页表项
+  //从memorylayout.h 中占9位也可以看出
+  printf("page table %p\n",pagetable);
+  recurprint(pagetable,0);
+}
+//递归打印
+void
+recurprint(pagetable_t pagetable,int depth){
+  if(pagetable==0||depth==3){
+    return;
+  }
+  //freewalk中说明 一个页表中有 2^9 = 512 个页表项
+  //从memorylayout.h 中占9位也可以看出
+  for(int i = 0; i < 512; ++i){
+    pte_t pte = pagetable[i];
+    //若存在且有效
+    if((pte&PTE_V)){
+      uint64 child = PTE2PA(pte);//对应物理地址
+      //打印 '..'
+      for(int j=0;j<=depth;++j){
+        printf(" ..");
+      }
+      printf("%d: pte %p pa %p\n",i,pte,child);
+      recurprint((pagetable_t)child,depth+1);
+    }
+  }
+}
